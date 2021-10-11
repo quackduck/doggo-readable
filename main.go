@@ -13,12 +13,41 @@ import (
 )
 
 func main() {
+	markdown := false
+	if len(os.Args) > 1 && os.Args[1] == "--md" {
+		markdown = true
+	}
+
 	rand.Seed(time.Now().UnixNano())
 	lenToWord, err := getWordSet()
 	if err != nil {
 		panic(err)
 	}
 	br := bufio.NewReader(os.Stdin)
+	if markdown {
+		for {
+			header, err := br.ReadBytes('-')
+			if err != nil {
+				panic(err)
+			}
+			os.Stdout.Write(header)
+			r, _, err := br.ReadRune()
+			if err != nil {
+				panic(err)
+			}
+			os.Stdout.WriteString(string(r))
+			if r == '-' {
+				r, _, err = br.ReadRune()
+				if err != nil {
+					panic(err)
+				}
+				os.Stdout.WriteString(string(r))
+				if r == '-' {
+					break
+				}
+			}
+		}
+	}
 	currString := ""
 	for {
 		r, _, err := br.ReadRune()
@@ -27,6 +56,36 @@ func main() {
 				break
 			}
 			panic(err)
+		}
+		if markdown && r == '-' {
+			os.Stdout.WriteString("-") // write out the first -
+			r, _, err = br.ReadRune()
+			if err != nil {
+				panic(err)
+			}
+			if r == '-' {
+				os.Stdout.WriteString("-") // write the second  -
+				r, _, err = br.ReadRune()
+				if err != nil {
+					panic(err)
+				}
+				if r == '-' {
+					os.Stdout.WriteString("-") // write the third -
+					_, err= br.WriteTo(os.Stdout)
+					if err != nil {
+						panic(err)
+					}
+					break
+				}
+			}
+		}
+		if markdown && r == '<' {
+			html, err := br.ReadString('>')
+			if err != nil {
+				panic(err)
+			}
+			os.Stdout.WriteString("<"+strings.TrimSuffix(html, ">"))
+			r = '>'
 		}
 		if !unicode.IsLetter(r) {
 			if len(currString) == 0 {
