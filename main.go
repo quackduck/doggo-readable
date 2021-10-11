@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 	"unicode"
@@ -75,7 +76,13 @@ func matchCase(model string, s string) string {
 }
 
 func getWordSet() (map[int][]string, error) {
-	data, err := ioutil.ReadFile("wordset.txt")
+
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := ioutil.ReadFile(filepath.Join(dir, "wordset.txt"))
 	if err != nil {
 		return nil, err
 	}
